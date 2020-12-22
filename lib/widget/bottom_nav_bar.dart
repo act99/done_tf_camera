@@ -8,12 +8,8 @@ class BottomNavBar extends StatelessWidget {
     double height = screenSize.height;
     return Container(
       height: height * 0.08,
-      decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(40.0),
-            topRight: const Radius.circular(40.0),
-          )),
+      decoration:
+          BoxDecoration(color: Colors.white, borderRadius: BorderRadius.only()),
       child: Stack(
         children: [
           TabBar(

@@ -74,10 +74,15 @@ class _MyAppState extends State<MyApp> {
                           )));
             },
             tooltip: 'Increment',
-            child: new Icon(
-              Icons.camera_alt,
-              color: Colors.blueGrey,
-              size: width * 0.1,
+            child: Container(
+              width: width * 0.15,
+              height: width * 0.15,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(300),
+                border:
+                    Border.all(width: width * 0.007, color: Colors.blueGrey),
+              ),
             ),
             elevation: 0.0,
           ),

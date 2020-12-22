@@ -9,6 +9,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:path/path.dart' show join;
 import 'package:path_provider/path_provider.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 
 class CameraScreen extends StatefulWidget {
@@ -107,13 +108,13 @@ class _CameraScreenState extends State<CameraScreen>
         TFLiteHelperRealMale.modelLoaded = true;
       });
     });
-    _setupAnimation();
+    // _setupAnimation();
 
     TFLiteHelperRealMale.tfLiteResultsController.stream.listen(
         (value) {
           value.forEach((element) {
             _colorAnimController.animateTo(element.confidence,
-                curve: Curves.bounceIn, duration: Duration(milliseconds: 500));
+                curve: Curves.bounceIn, duration: Duration(milliseconds: 1000));
           });
 
           //Set Results
@@ -128,6 +129,10 @@ class _CameraScreenState extends State<CameraScreen>
         onDone: () {},
         onError: (error) {
           AppHelper.log("listen", error);
+          _cameraController.dispose();
+          TFLiteHelperRealMale.disposeModel();
+          AppHelper.log('사진찍기 종료', '종료');
+          Navigator.pop(context);
         });
   }
 
@@ -156,11 +161,26 @@ class _CameraScreenState extends State<CameraScreen>
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.done) {
                   // Future가 완료되면, 프리뷰를 보여줍니다.
-                  return Stack(
-                    children: <Widget>[
-                      CameraPreview(_cameraController),
-                      _buildResultsWidget(context, outputs),
-                    ],
+                  return Transform.scale(
+                    scale: 1.0,
+                    child: AspectRatio(
+                      aspectRatio: 3.0 / 4.0,
+                      child: OverflowBox(
+                        alignment: Alignment.center,
+                        child: FittedBox(
+                          fit: BoxFit.fitWidth,
+                          child: Container(
+                            width: width,
+                            height: width / _cameraController.value.aspectRatio,
+                            child: Stack(
+                              children: <Widget>[
+                                CameraPreview(_cameraController),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   );
                 } else {
                   // 그렇지 않다면, 진행 표시기를 보여줍니다.
@@ -235,67 +255,68 @@ class _CameraScreenState extends State<CameraScreen>
     );
   }
 
-  Widget _buildResultsWidget(BuildContext context, List<Result> outputs) {
-    Size screenSize = MediaQuery.of(context).size;
-    double width = screenSize.width;
-    double height = screenSize.height;
-    return Positioned.fill(
-      child: Align(
-        alignment: Alignment.bottomCenter,
-        child: Container(
-          height: height * 0.1,
-          width: width * 1,
-          color: Colors.white,
-          child: outputs != null && outputs.isNotEmpty
-              ? ListView.builder(
-                  itemCount: outputs.length,
-                  shrinkWrap: true,
-                  padding: const EdgeInsets.all(20.0),
-                  itemBuilder: (BuildContext context, int index) {
-                    return Column(
-                      children: <Widget>[
-                        Text(
-                          outputs[index].label,
-                          style: TextStyle(
-                            color: _colorTween.value,
-                            fontSize: 20.0,
-                          ),
-                        ),
-                        AnimatedBuilder(
-                            animation: _colorAnimController,
-                            builder: (context, child) => LinearPercentIndicator(
-                                  width: width * 0.88,
-                                  lineHeight: 14.0,
-                                  percent: outputs[index].confidence,
-                                  progressColor: _colorTween.value,
-                                )),
-                        Text(
-                          "${(outputs[index].confidence * 100.0).toStringAsFixed(2)} %",
-                          style: TextStyle(
-                            color: _colorTween.value,
-                            fontSize: 16.0,
-                          ),
-                        ),
-                      ],
-                    );
-                  })
-              : Center(
-                  child: Text("Wating for model to detect..",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 20.0,
-                      ))),
-        ),
-      ),
-    );
-  }
+  // Widget _buildResultsWidget(BuildContext context, List<Result> outputs) {
+  //   Size screenSize = MediaQuery.of(context).size;
+  //   double width = screenSize.width;
+  //   double height = screenSize.height;
+  //   return Positioned.fill(
+  //     child: Align(
+  //       alignment: Alignment.bottomCenter,
+  //       child: Container(
+  //         height: height * 0.1,
+  //         width: width * 1,
+  //         color: Colors.white,
+  //         child: outputs != null && outputs.isNotEmpty
+  //             ? ListView.builder(
+  //                 itemCount: outputs.length,
+  //                 shrinkWrap: true,
+  //                 padding: const EdgeInsets.all(20.0),
+  //                 itemBuilder: (BuildContext context, int index) {
+  //                   return Column(
+  //                     children: <Widget>[
+  //                       Text(
+  //                         outputs[index].label,
+  //                         style: TextStyle(
+  //                           color: _colorTween.value,
+  //                           fontSize: 20.0,
+  //                         ),
+  //                       ),
+  //                       AnimatedBuilder(
+  //                           animation: _colorAnimController,
+  //                           builder: (context, child) => CircularPercentIndicator(
+  //                             radius: 100,
+  //                                 width: width * 0.88,
+  //                                 lineHeight: 14.0,
+  //                                 percent: outputs[index].confidence,
+  //                                 progressColor: _colorTween.value,
+  //                               )),
+  //                       Text(
+  //                         "${(outputs[index].confidence * 100.0).toStringAsFixed(2)} %",
+  //                         style: TextStyle(
+  //                           color: _colorTween.value,
+  //                           fontSize: 16.0,
+  //                         ),
+  //                       ),
+  //                     ],
+  //                   );
+  //                 })
+  //             : Center(
+  //                 child: Text("Wating for model to detect..",
+  //                     style: TextStyle(
+  //                       color: Colors.black,
+  //                       fontSize: 20.0,
+  //                     ))),
+  //       ),
+  //     ),
+  //   );
+  // }
 
-  void _setupAnimation() {
-    _colorAnimController =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 500));
-    _colorTween = ColorTween(begin: Colors.green, end: Colors.red)
-        .animate(_colorAnimController);
-  }
+  // void _setupAnimation() {
+  //   _colorAnimController =
+  //       AnimationController(vsync: this, duration: Duration(milliseconds: 500));
+  //   _colorTween = ColorTween(begin: Colors.green, end: Colors.red)
+  //       .animate(_colorAnimController);
+  // }
 }
 
 class DisplayPictureScreen extends StatelessWidget {

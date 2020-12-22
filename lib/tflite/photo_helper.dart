@@ -8,7 +8,7 @@ class TFLiteHelper {
   static List<Result> _outputs = List();
   static var modelLoaded = false;
 
-  static Future<String> loadModel1() async {
+  static Future<String> loadModelFemale() async {
     AppHelper.log("loadModel", "Loading model..");
 
     return Tflite.loadModel(
@@ -17,33 +17,13 @@ class TFLiteHelper {
     );
   }
 
-  static Future<String> loadModel2() async {
+  static Future<String> loadModelMale() async {
     AppHelper.log("loadModel", "Loading model..");
 
     return Tflite.loadModel(
       model: "assets/model_unquant.tflite",
       labels: "assets/labels.txt",
     );
-  }
-
-  static classifyImage(File image) async {
-    await Tflite.runModelOnImage(
-      path: image.path,
-      numResults: 7,
-      threshold: 0.5,
-      imageMean: 127.5,
-      imageStd: 127.5,
-    ).then((value) {
-      if (value.isNotEmpty) {
-        _outputs.clear();
-        value.forEach((element) {
-          _outputs.add(Result(
-              element['confidence'], element['index'], element['label']));
-        });
-      }
-
-      _outputs.sort((a, b) => a.confidence.compareTo(b.confidence));
-    });
   }
 
   static void disposeModel() {
